@@ -16,10 +16,7 @@ class InventoryService:
 
     @staticmethod
     def update_stock(product_id, quantity_change):
-        # Quantity change can be negative (reduce stock) or positive (restock)
-        # Note: Requirement says "Update inventory after order", likely reduce.
-        # But method signature in requirements is nonspecific, so I'll assume explicit set or reduce.
-        # "Update stock quantities after order placement" -> reduce.
+        
         product = Inventory.query.get(product_id)
         if not product:
             return None
