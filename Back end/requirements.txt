@@ -1,0 +1,8 @@
+Flask
+Flask-RESTful
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-CORS
+#To switch your Flask Todo backend from SQLite to MySQL
+mysqlclient
+mysql-connector-python
