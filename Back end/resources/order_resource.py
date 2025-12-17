@@ -1,30 +1,36 @@
-from flask_restful import Resource, reqparse
+from flask import request
+from flask_restful import Resource
 from services.order_service import OrderService
-from services.pricing_service import PricingService
-from services.inventory_service import InventoryService
 
-parser = reqparse.RequestParser()
-parser.add_argument("product_id", type=int, required=True)
-parser.add_argument("quantity", type=int, required=True)
-
-class OrderResource(Resource):
-
+class OrderCreateResource(Resource):
     def post(self):
-        args = parser.parse_args()
+        data = request.get_json()
+        # Input: {customer_id: 1, products: [...], total_amount: 100}
+        
+        try:
+            customer_id = data.get('customer_id')
+            products = data.get('products')
+            total_amount = data.get('total_amount')
+            
+            order = OrderService.create_order(customer_id, products, total_amount)
+            return {'message': 'Order created', 'order': order.to_dict()}, 201
+        except ValueError as e:
+            return {'message': str(e)}, 400
+        except Exception as e:
+            return {'message': f"Server Error: {str(e)}"}, 500
 
-        total_price = PricingService.calculate_price(
-            args["product_id"], args["quantity"]
-        )
+class OrderDetailResource(Resource):
+    def get(self, order_id):
+        order = OrderService.get_order(order_id)
+        if order:
+            return order.to_dict(), 200
+        return {'message': 'Order not found'}, 404
 
-        InventoryService.reduce_stock(
-            args["product_id"], args["quantity"]
-        )
-
-        order = OrderService.create_order(
-            args["product_id"], args["quantity"], total_price
-        )
-
-        return {
-            "order_id": order.id,
-            "total_price": order.total_price
-        }, 201
+class OrderListResource(Resource):
+    # Support "GET /api/orders?customer_id=X"
+    def get(self):
+        customer_id = request.args.get('customer_id')
+        if customer_id:
+            orders = OrderService.get_orders_by_customer(customer_id)
+            return [o.to_dict() for o in orders], 200
+        return [], 200

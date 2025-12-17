@@ -1,40 +1,32 @@
-from Models import Customer
+import requests
+from models import Customer, Order
 from extensions import db
 
 class CustomerService:
+    ORDER_SERVICE_URL = "http://localhost:5001/api/orders"
 
     @staticmethod
-    def get_all_customers():
-        return Customer.query.all()
-
-    @staticmethod
-    def get_customer_by_id(customer_id):
+    def get_customer(customer_id):
         return Customer.query.get(customer_id)
 
     @staticmethod
-    def create_customer(name, email, phone=None):
-        customer = Customer(name=name, email=email, phone=phone)
-        db.session.add(customer)
-        db.session.commit()
-        return customer
+    def get_customer_orders(customer_id):
+        # Call Order Service to get orders for this customer
+        # Requirement: GET /api/customers/{customer_id}/orders -> calls Order Service
+        try:
+            # Order Service needed endpoint: GET /api/orders?customer_id=X
+            response = requests.get(f"{CustomerService.ORDER_SERVICE_URL}", params={'customer_id': customer_id})
+            if response.status_code == 200:
+                return response.json()
+        except requests.exceptions.RequestException:
+            pass
+        return []
 
     @staticmethod
-    def update_customer(customer_id, name=None, email=None, phone=None):
+    def update_loyalty_points(customer_id, points):
         customer = Customer.query.get(customer_id)
         if customer:
-            if name:
-                customer.name = name
-            if email:
-                customer.email = email
-            if phone is not None:
-                customer.phone = phone
+            customer.loyalty_points += points
             db.session.commit()
-        return customer
-
-    @staticmethod
-    def delete_customer(customer_id):
-        customer = Customer.query.get(customer_id)
-        if customer:
-            db.session.delete(customer)
-            db.session.commit()
-        return customer
+            return customer
+        return None

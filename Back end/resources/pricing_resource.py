@@ -1,9 +1,13 @@
+from flask import request
 from flask_restful import Resource
-from Models import Pricing
+from services.pricing_service import PricingService
 
-class PricingListResource(Resource):
-    def get(self):
-        return [
-            {"product_id": p.product_id, "price": p.price}
-            for p in Pricing.query.all()
-        ]
+class PricingCalculateResource(Resource):
+    def post(self):
+        data = request.get_json()
+        if not data or 'products' not in data:
+            return {'message': 'Invalid input, products list required'}, 400
+            
+        products = data['products']
+        result = PricingService.calculate_price(products)
+        return result, 200
