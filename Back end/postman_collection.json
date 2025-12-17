@@ -1,0 +1,298 @@
+{
+    "info": {
+        "_postman_id": "e_commerce_microservices_collection",
+        "name": "E-Commerce Microservices",
+        "description": "Collection to test E-Commerce Microservices (Order, Inventory, Pricing, Customer, Notification)",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Inventory Service",
+            "item": [
+                {
+                    "name": "Check Inventory",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5002/api/inventory/check/1",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5002",
+                            "path": [
+                                "api",
+                                "inventory",
+                                "check",
+                                "1"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Inventory",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"product_id\": 1,\n    \"quantity_change\": 5\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5002/api/inventory/update",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5002",
+                            "path": [
+                                "api",
+                                "inventory",
+                                "update"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Pricing Service",
+            "item": [
+                {
+                    "name": "Calculate Price",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"products\": [\n        {\"product_id\": 1, \"quantity\": 1},\n        {\"product_id\": 2, \"quantity\": 2}\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5003/api/pricing/calculate",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5003",
+                            "path": [
+                                "api",
+                                "pricing",
+                                "calculate"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Order Service",
+            "item": [
+                {
+                    "name": "Create Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"customer_id\": 1,\n    \"products\": [\n        {\"product_id\": 1, \"quantity\": 1}\n    ],\n    \"total_amount\": 1050.00\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5001/api/orders/create",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5001",
+                            "path": [
+                                "api",
+                                "orders",
+                                "create"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Order Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5001/api/orders/1",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5001",
+                            "path": [
+                                "api",
+                                "orders",
+                                "1"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Customer Order History",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5001/api/orders?customer_id=1",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5001",
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "customer_id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Customer Service",
+            "item": [
+                {
+                    "name": "Get Customer Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5004/api/customers/1",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5004",
+                            "path": [
+                                "api",
+                                "customers",
+                                "1"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Customer Orders (via Customer Service)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5004/api/customers/1/orders",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5004",
+                            "path": [
+                                "api",
+                                "customers",
+                                "1",
+                                "orders"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Loyalty Points",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"points\": 10\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5004/api/customers/1/loyalty",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5004",
+                            "path": [
+                                "api",
+                                "customers",
+                                "1",
+                                "loyalty"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Notification Service",
+            "item": [
+                {
+                    "name": "Send Notification",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"order_id\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:5005/api/notifications/send",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5005",
+                            "path": [
+                                "api",
+                                "notifications",
+                                "send"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

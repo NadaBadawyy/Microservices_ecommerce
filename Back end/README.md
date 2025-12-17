@@ -56,6 +56,9 @@ Run each command in a separate terminal:
 - `python run_customer.py` (Port 5004)
 - `python run_notification.py` (Port 5005)
 
+## API Integration
+**Pro Tip:** Import the file **`postman_collection.json`** into Postman to see and run all the requests immediately without manual setup.
+
 ## API Integration Guide for Frontend
 
 ### 1. Product Inventory
