@@ -10,6 +10,27 @@
             "name": "Inventory Service",
             "item": [
                 {
+                    "name": "Get All Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5002/api/inventory/products",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5002",
+                            "path": [
+                                "api",
+                                "inventory",
+                                "products"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
                     "name": "Check Inventory",
                     "request": {
                         "method": "GET",
@@ -183,6 +204,26 @@
         {
             "name": "Customer Service",
             "item": [
+                {
+                    "name": "Get All Customers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:5004/api/customers",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "5004",
+                            "path": [
+                                "api",
+                                "customers"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
                 {
                     "name": "Get Customer Profile",
                     "request": {

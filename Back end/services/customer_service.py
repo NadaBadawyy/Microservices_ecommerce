@@ -10,6 +10,10 @@ class CustomerService:
         return Customer.query.get(customer_id)
 
     @staticmethod
+    def get_all_customers():
+        return Customer.query.all()
+
+    @staticmethod
     def get_customer_orders(customer_id):
         # Call Order Service to get orders for this customer
         # Requirement: GET /api/customers/{customer_id}/orders -> calls Order Service

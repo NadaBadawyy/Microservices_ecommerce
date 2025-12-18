@@ -9,6 +9,11 @@ class CustomerResource(Resource):
             return customer.to_dict(), 200
         return {'message': 'Customer not found'}, 404
 
+class CustomerListResource(Resource):
+    def get(self):
+        customers = CustomerService.get_all_customers()
+        return [c.to_dict() for c in customers], 200
+
 class CustomerOrdersResource(Resource):
     def get(self, customer_id):
         orders = CustomerService.get_customer_orders(customer_id)

@@ -14,6 +14,11 @@ class InventoryCheckResource(Resource):
         product = InventoryService.get_product(product_id)
         return product.to_dict(), 200
 
+class InventoryListResource(Resource):
+    def get(self):
+        products = InventoryService.get_all_products()
+        return [p.to_dict() for p in products], 200
+
 class InventoryUpdateResource(Resource):
     def put(self):
         data = request.get_json()

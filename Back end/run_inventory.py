@@ -3,7 +3,7 @@ from flask_restful import Api
 from flask_cors import CORS
 from config import Config
 from extensions import db, migrate
-from resources.inventory_resource import InventoryCheckResource, InventoryUpdateResource
+from resources.inventory_resource import InventoryCheckResource, InventoryUpdateResource, InventoryListResource
 
 def create_app():
     app = Flask(__name__)
@@ -16,6 +16,7 @@ def create_app():
     
     # Inventory Service Endpoints
     api.add_resource(InventoryCheckResource, "/api/inventory/check/<int:product_id>")
+    api.add_resource(InventoryListResource, "/api/inventory/products")
     api.add_resource(InventoryUpdateResource, "/api/inventory/update")
     
     CORS(app)

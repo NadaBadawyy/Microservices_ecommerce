@@ -15,6 +15,10 @@ class InventoryService:
         return None
 
     @staticmethod
+    def get_all_products():
+        return Inventory.query.all()
+
+    @staticmethod
     def update_stock(product_id, quantity_change):
         
         product = Inventory.query.get(product_id)
