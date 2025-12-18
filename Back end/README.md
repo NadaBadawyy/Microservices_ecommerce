@@ -27,14 +27,14 @@ pip install -r requirements.txt
 Run these commands to set up the database schema:
 ```bash
 set FLASK_APP=manage.py
-flask db init
-flask db migrate -m "Initial migration"
-flask db upgrade
+python -m flask db init
+python -m flask db migrate -m "Initial migration"
+python -m flask db upgrade
 ```
 *Note: Since the `migrations` folder is included, you likely only need to run:*
 ```bash
 set FLASK_APP=manage.py
-flask db upgrade
+python -m flask db upgrade
 ```
 *If that fails, or if you want to start fresh, delete the `migrations` folder and run the full commands above.*
 
