@@ -11,5 +11,5 @@ import os
 # # which reduces memory usage and removes the warning about this feature being deprecated 
 # # by default
 class Config:
-    SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://root:Nada%40186@localhost:3306/ecommerce_system"
+    SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://root:123456@localhost:3306/ecommerce_order_ms"
     SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -2,6 +2,9 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
+
+<jsp:include page="navbar.jsp"/>
+
 <div class="max-w-xl mx-auto p-6">
     <h2 class="text-2xl font-bold mb-6">Checkout</h2>
 

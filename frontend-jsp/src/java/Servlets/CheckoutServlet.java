@@ -22,7 +22,7 @@ public class CheckoutServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
 
-        // Fetch customers and products from APIs (like before)
+        // Fetch customers and products from APIs
         HttpClient client = HttpClient.newHttpClient();
         ObjectMapper mapper = new ObjectMapper();
 
@@ -30,7 +30,9 @@ public class CheckoutServlet extends HttpServlet {
             // Customers
             HttpRequest customerReq = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:5004/api/customers"))
-                    .GET().build();
+                    .GET()
+                    .build();
+            
             HttpResponse<String> customerResp = client.send(customerReq, HttpResponse.BodyHandlers.ofString());
             List<Map<String, Object>> customers = mapper.readValue(
                     customerResp.body(),

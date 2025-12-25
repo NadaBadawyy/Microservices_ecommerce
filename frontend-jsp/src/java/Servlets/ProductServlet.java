@@ -48,9 +48,6 @@ public class ProductServlet extends HttpServlet {
             RequestDispatcher rd = req.getRequestDispatcher("index.jsp");
             rd.forward(req, res);
 
-            System.out.println("Products JSON: " + response.body());
-            System.out.println("Parsed List<Map>: " + products);
-
         } catch (Exception e) {
             res.sendError(500, "Unable to load products");
         }

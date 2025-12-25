@@ -3,17 +3,16 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
+<jsp:include page="navbar.jsp"/>
 
 <div class="max-w-4xl mx-auto p-6 pt-20">
 
-    <!-- Order Status Message -->
     <c:set var="success" value="${fn:containsIgnoreCase(orderResponse, 'success')}"/>
     <div class="mb-6 p-4 rounded shadow bg-gray-100 border-l-4 border-gray-500 text-gray-700">
         <h3 class="text-lg font-semibold mb-2">Order Status</h3>
         <p>${orderResponse}</p>
     </div>
 
-    <!-- Order History -->
     <div class="border p-4 rounded shadow">
         <h3 class="text-xl font-semibold mb-4">Order History</h3>
 
