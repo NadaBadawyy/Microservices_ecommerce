@@ -1,6 +1,7 @@
 import requests
 from models import Order, OrderItem
 from extensions import db
+from services.pricing_service import PricingService
 
 class OrderService:
     INVENTORY_SERVICE_URL = "http://localhost:5002/api/inventory"
@@ -37,7 +38,13 @@ class OrderService:
         db.session.add(new_order)
         db.session.flush() # Get ID
 
-        # 4. Save Order Items and Deduct Stock
+        # 4. Get unit prices (from Pricing Service) and Save Order Items and Deduct Stock
+        try:
+            pricing_result = PricingService.calculate_price(products)
+            price_map = {d['product_id']: d.get('unit_price', 0) for d in pricing_result.get('details', [])}
+        except Exception:
+            price_map = {}
+
         for item in products:
             p_id = item['product_id']
             qty = item['quantity']
@@ -57,7 +64,7 @@ class OrderService:
                 order_id=new_order.order_id,
                 product_id=p_id,
                 quantity=qty,
-                unit_price=0 # Placeholder, ideally strictly calculated
+                unit_price=price_map.get(p_id, 0)
             )
             db.session.add(order_item)
 

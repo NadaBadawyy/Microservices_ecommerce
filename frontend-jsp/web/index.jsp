@@ -1,10 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- JSTL to allow making logic inside jsp instead of using Java expressions --> 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-
 <jsp:include page="navbar.jsp"/>
-
 <div class="max-w-7xl mx-auto p-6">
     <h2 class="text-3xl font-bold mb-6">Product Catalog</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -30,7 +29,5 @@
         </c:forEach>
     </div>
 
-
     <a href="<%= request.getContextPath()%>/CheckoutServlet" class="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded">Make Order</a>
-
 </div>

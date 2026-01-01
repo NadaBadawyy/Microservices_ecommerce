@@ -21,17 +21,21 @@ public class ProductServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws IOException {
-
+        // Creat Java object (client) that can call other web servers
         HttpClient client = HttpClient.newHttpClient();
+
+        // Prepare an HTTP GET request to the inventory service.
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:5002/api/inventory/products"))
                 .GET()
                 .build();
 
         try {
+            // Send the request and wait for the response then store it
             HttpResponse<String> response
                     = client.send(request, HttpResponse.BodyHandlers.ofString());
 
+            // The jackson object that will convert JSON to java object
             ObjectMapper mapper = new ObjectMapper();
 
             // Parse JSON directly into List<Map>
@@ -39,7 +43,7 @@ public class ProductServlet extends HttpServlet {
                     response.body(),
                     new TypeReference<List<Map<String, Object>>>() {
             }
-            ); 
+            );
 
             // Set as request attribute
             req.setAttribute("products", products);

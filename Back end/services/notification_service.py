@@ -37,8 +37,11 @@ class NotificationService:
             # Get Customer
             cust_resp = requests.get(f"{NotificationService.CUSTOMER_SERVICE_URL}/{customer_id}")
             customer_email = "unknown@example.com"
+            customer_phone = None
             if cust_resp.status_code == 200:
-                customer_email = cust_resp.json().get('email')
+                cdata = cust_resp.json()
+                customer_email = cdata.get('email', customer_email)
+                customer_phone = cdata.get('phone')
 
             # Get Inventory Estimates (Mocking call as per requirements)
             # requests.get(Inventory...)
@@ -49,14 +52,27 @@ class NotificationService:
             print(f"Subject: Order #{order_id} Confirmed")
             print(f"Body: {message}")
 
-            # Log
-            log = NotificationLog(
+            # Log Email
+            email_log = NotificationLog(
                 order_id=order_id,
                 customer_id=customer_id,
                 notification_type='EMAIL',
                 message=message
             )
-            db.session.add(log)
+            db.session.add(email_log)
+
+            # Simulate SMS (console) and log if phone present
+            if customer_phone:
+                print(f"SIMULATED SMS SENT TO: {customer_phone}")
+                print(f"Body: {message}")
+                sms_log = NotificationLog(
+                    order_id=order_id,
+                    customer_id=customer_id,
+                    notification_type='SMS',
+                    message=message
+                )
+                db.session.add(sms_log)
+
             db.session.commit()
             return True, "Sent"
 

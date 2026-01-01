@@ -1,28 +1,19 @@
 package servlets;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.URI;
+import com.fasterxml.jackson.databind.*;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import jakarta.servlet.annotation.*;
 import java.io.IOException;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.net.URI;
+import java.net.http.*;
+import java.util.*;
 
 @WebServlet("/CheckoutServlet")
 public class CheckoutServlet extends HttpServlet {
 
-    protected void doGet(HttpServletRequest req, HttpServletResponse res)
-            throws ServletException, IOException {
-
-        // Fetch customers and products from APIs
+    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        // Load customers and products for initial page
         HttpClient client = HttpClient.newHttpClient();
         ObjectMapper mapper = new ObjectMapper();
 
@@ -30,11 +21,9 @@ public class CheckoutServlet extends HttpServlet {
             // Customers
             HttpRequest customerReq = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:5004/api/customers"))
-                    .GET()
-                    .build();
-            
+                    .GET().build();
             HttpResponse<String> customerResp = client.send(customerReq, HttpResponse.BodyHandlers.ofString());
-            List<Map<String, Object>> customers = mapper.readValue(
+            List<Map<String,Object>> customers = mapper.readValue(
                     customerResp.body(),
                     new com.fasterxml.jackson.core.type.TypeReference<List<Map<String,Object>>>(){}
             );
@@ -45,45 +34,75 @@ public class CheckoutServlet extends HttpServlet {
                     .uri(URI.create("http://localhost:5002/api/inventory/products"))
                     .GET().build();
             HttpResponse<String> productResp = client.send(productReq, HttpResponse.BodyHandlers.ofString());
-            List<Map<String, Object>> products = mapper.readValue(
+            List<Map<String,Object>> products = mapper.readValue(
                     productResp.body(),
                     new com.fasterxml.jackson.core.type.TypeReference<List<Map<String,Object>>>(){}
             );
             req.setAttribute("products", products);
 
-            // Forward to checkout.jsp
-            req.getRequestDispatcher("checkout.jsp").forward(req, res);
+            req.getRequestDispatcher("checkout.jsp").forward(req,res);
 
-        } catch (Exception e) {
+        } catch(Exception e) {
             e.printStackTrace();
-            res.sendError(500, "Failed to load checkout page");
+            res.sendError(500,"Failed to load checkout page");
         }
     }
 
-    protected void doPost(HttpServletRequest req, HttpServletResponse res)
-            throws ServletException, IOException {
-
-        // Collect form data
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         String customerId = req.getParameter("customer_id");
         String[] productIds = req.getParameterValues("product_id");
 
-        if (productIds == null) {
-            res.sendError(400, "No products selected");
+        if(productIds == null || productIds.length == 0){
+            req.setAttribute("errorMessage","No products selected!");
+            doGet(req,res);
             return;
         }
 
-        List<Map<String, Object>> products = new ArrayList<>();
-        for (String pid : productIds) {
-            String qty = req.getParameter("quantity_" + pid);
-            Map<String, Object> item = new HashMap<>();
-            item.put("product_id", Integer.parseInt(pid));
-            item.put("quantity", Integer.parseInt(qty));
-            products.add(item);
-        }
+        HttpClient client = HttpClient.newHttpClient();
+        ObjectMapper mapper = new ObjectMapper();
+        List<Map<String,Object>> selectedProducts = new ArrayList<>();
+        double totalAmount = 0.0;
 
-        // Store in request and forward to confirmation page
-        req.setAttribute("customer_id", customerId);
-        req.setAttribute("products", products);
-        req.getRequestDispatcher("confirmation.jsp").forward(req, res);
+        try {
+            // Check availability and calculate total
+            for(String pidStr : productIds){
+                int pid = Integer.parseInt(pidStr);
+                int qty = Integer.parseInt(req.getParameter("quantity_" + pid));
+
+                HttpRequest checkReq = HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:5002/api/inventory/check/" + pid))
+                        .GET().build();
+                HttpResponse<String> checkResp = client.send(checkReq,HttpResponse.BodyHandlers.ofString());
+                JsonNode checkJson = mapper.readTree(checkResp.body());
+                int available = checkJson.get("quantity_available").asInt();
+                double unitPrice = checkJson.get("unit_price").asDouble();
+                String productName = checkJson.get("product_name").asText();
+
+                if(qty > available){
+                    req.setAttribute("errorMessage","Not enough stock for "+productName+". Available: "+available);
+                    doGet(req,res);
+                    return;
+                }
+
+                Map<String,Object> prod = new HashMap<>();
+                prod.put("product_id", pid);
+                prod.put("product_name", productName);
+                prod.put("unit_price", unitPrice);
+                prod.put("quantity", qty);
+                selectedProducts.add(prod);
+
+                totalAmount += unitPrice*qty;
+            }
+
+            req.setAttribute("customer_id", customerId);
+            req.setAttribute("selectedProducts", selectedProducts);
+            req.setAttribute("totalAmount", totalAmount);
+            req.getRequestDispatcher("confirmation.jsp").forward(req,res);
+
+        } catch(Exception e){
+            e.printStackTrace();
+            req.setAttribute("errorMessage","Error calculating total or checking stock!");
+            doGet(req,res);
+        }
     }
 }

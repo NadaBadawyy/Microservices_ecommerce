@@ -12,151 +12,100 @@ import java.util.*;
 @WebServlet("/OrderServlet")
 public class OrderServlet extends HttpServlet {
 
-    protected void doPost(HttpServletRequest req, HttpServletResponse res)
-            throws ServletException, IOException {
-
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         String customerId = req.getParameter("customer_id");
         String[] productIds = req.getParameterValues("product_id");
 
-        if (productIds == null || productIds.length == 0) {
-            res.sendError(400, "No products selected");
-            return;
-        }
-
-        List<Map<String, Object>> products = new ArrayList<>();
-        for (String pid : productIds) {
-            String qty = req.getParameter("quantity_" + pid);
-            Map<String, Object> item = new HashMap<>();
-            item.put("product_id", Integer.parseInt(pid));
-            item.put("quantity", Integer.parseInt(qty));
-            products.add(item);
-        }
+        double totalAmount = Double.parseDouble(req.getParameter("totalAmount")); // <-- use the total from previous servlet
 
         ObjectMapper mapper = new ObjectMapper();
         HttpClient client = HttpClient.newHttpClient();
+        List<Map<String,Object>> products = new ArrayList<>();
 
         try {
-            // Calculate the total price
-            Map<String, Object> pricingPayload = new HashMap<>();
-            pricingPayload.put("products", products);
+            for(String pidStr: productIds){
+                int pid = Integer.parseInt(pidStr);
+                int qty = Integer.parseInt(req.getParameter("quantity_" + pid));
+                Map<String,Object> item = new HashMap<>();
+                item.put("product_id", pid);
+                item.put("quantity", qty);
+                products.add(item);
+            }
 
-            HttpRequest pricingRequest = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:5003/api/pricing/calculate"))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(pricingPayload)))
-                    .build();
-
-            HttpResponse<String> pricingResponse = client.send(pricingRequest, HttpResponse.BodyHandlers.ofString());
-            JsonNode pricingJson = mapper.readTree(pricingResponse.body());
-            double totalAmount = pricingJson.has("total_amount") ? pricingJson.get("total_amount").asDouble() : 0.0;
-
-            // Create the order
-            Map<String, Object> orderPayload = new HashMap<>();
+            // Create order
+            Map<String,Object> orderPayload = new HashMap<>();
             orderPayload.put("customer_id", Integer.parseInt(customerId));
             orderPayload.put("products", products);
-            orderPayload.put("total_amount", totalAmount);
+            orderPayload.put("total_amount", totalAmount); // use passed value
 
-            HttpRequest orderRequest = HttpRequest.newBuilder()
+            HttpRequest orderReq = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:5001/api/orders/create"))
-                    .header("Content-Type", "application/json")
+                    .header("Content-Type","application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(orderPayload)))
                     .build();
+            HttpResponse<String> orderResp = client.send(orderReq,HttpResponse.BodyHandlers.ofString());
 
-            HttpResponse<String> orderResponse = client.send(orderRequest, HttpResponse.BodyHandlers.ofString());
+            JsonNode orderJson = mapper.readTree(orderResp.body());
+            String orderMessage = orderJson.has("message") ? orderJson.get("message").asText() : "Order processed";
+            int orderId = orderJson.has("order") && orderJson.get("order").has("order_id")
+                    ? orderJson.get("order").get("order_id").asInt() : -1;
 
-            // Get the order message
-            String orderResponseBody = orderResponse.body();
-            System.out.println("Raw order response: " + orderResponseBody);
-
-            JsonNode orderJson = mapper.readTree(orderResponseBody);
-
-            String orderMessage = orderJson.has("message")
-                    ? orderJson.get("message").asText()
-                    : "Order processed";
-
-            int orderId = -1;
-
-            if (orderJson.has("order") && orderJson.get("order").has("order_id")) {
-                orderId = orderJson.get("order").get("order_id").asInt();
-            }
-            boolean success = orderResponse.statusCode() >= 200 && orderResponse.statusCode() < 300;
-
-            if (success) {
-
-                // Update the inventory
-                Map<String, Object> inventoryPayload = new HashMap<>();
-                inventoryPayload.put("products", products);
-
-                HttpRequest inventoryRequest = HttpRequest.newBuilder()
+            // Update inventory
+            for(Map<String,Object> p: products){
+                int pid = (int)p.get("product_id");
+                int qty = (int)p.get("quantity");
+                Map<String,Object> invPayload = new HashMap<>();
+                invPayload.put("product_id", pid);
+                invPayload.put("quantity_change", -qty);
+                HttpRequest invReq = HttpRequest.newBuilder()
                         .uri(URI.create("http://localhost:5002/api/inventory/update"))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(inventoryPayload)))
+                        .header("Content-Type","application/json")
+                        .PUT(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(invPayload)))
                         .build();
-
-                HttpResponse<String> inventoryResponse
-                        = client.send(inventoryRequest, HttpResponse.BodyHandlers.ofString());
-
-                System.out.println("Inventory update response: " + inventoryResponse.body());
-
-                // Update loyalty points
-                int loyaltyPoints = (int) Math.floor(totalAmount / 10);
-                System.out.println("Loyalty points earned: " + loyaltyPoints);
-
-                Map<String, Object> loyaltyPayload = new HashMap<>();
-                loyaltyPayload.put("points", loyaltyPoints);
-
-                HttpRequest loyaltyRequest = HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:5004/api/customers/" + customerId + "/loyalty"))
-                        .header("Content-Type", "application/json")
-                        .PUT(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(loyaltyPayload)))
-                        .build();
-
-                HttpResponse<String> loyaltyResponse
-                        = client.send(loyaltyRequest, HttpResponse.BodyHandlers.ofString());
-
-                System.out.println("Loyalty update response: " + loyaltyResponse.body());
-
-                // Send notification
-                if (orderId != -1) {
-
-                    Map<String, Object> notificationPayload = new HashMap<>();
-                    notificationPayload.put("order_id", orderId);
-
-                    HttpRequest notificationRequest = HttpRequest.newBuilder()
-                            .uri(URI.create("http://localhost:5005/api/notifications/send"))
-                            .header("Content-Type", "application/json")
-                            .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(notificationPayload)))
-                            .build();
-
-                    HttpResponse<String> notificationResponse
-                            = client.send(notificationRequest, HttpResponse.BodyHandlers.ofString());
-
-                    System.out.println("Notification response: " + notificationResponse.body());
-                }
-
+                client.send(invReq,HttpResponse.BodyHandlers.ofString());
             }
 
-            // Get the order history of the customer
-            HttpRequest historyRequest = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:5001/api/orders?customer_id=" + customerId))
-                    .GET()
+            // Update loyalty points
+            int loyaltyPoints = (int)Math.floor(totalAmount/10);
+            Map<String,Object> loyaltyPayload = new HashMap<>();
+            loyaltyPayload.put("points", loyaltyPoints);
+            HttpRequest loyaltyReq = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:5004/api/customers/" + customerId + "/loyalty"))
+                    .header("Content-Type","application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(loyaltyPayload)))
                     .build();
+            client.send(loyaltyReq,HttpResponse.BodyHandlers.ofString());
 
-            HttpResponse<String> historyResponse = client.send(historyRequest, HttpResponse.BodyHandlers.ofString());
-            List<Map<String, Object>> history = mapper.readValue(
-                    historyResponse.body(),
-                    new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>() {
+            // Send notification
+            if(orderId != -1){
+                Map<String,Object> notifPayload = new HashMap<>();
+                notifPayload.put("order_id", orderId);
+                HttpRequest notifReq = HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:5005/api/notifications/send"))
+                        .header("Content-Type","application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(notifPayload)))
+                        .build();
+                client.send(notifReq,HttpResponse.BodyHandlers.ofString());
             }
+
+            // Fetch order history
+            HttpRequest historyReq = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:5001/api/orders?customer_id="+customerId))
+                    .GET().build();
+            HttpResponse<String> historyResp = client.send(historyReq,HttpResponse.BodyHandlers.ofString());
+            List<Map<String,Object>> history = mapper.readValue(
+                    historyResp.body(),
+                    new com.fasterxml.jackson.core.type.TypeReference<List<Map<String,Object>>>(){}
             );
 
-            // Forward to confirmation page
             req.setAttribute("orderResponse", orderMessage);
             req.setAttribute("orderHistory", history);
-            req.getRequestDispatcher("confirmation.jsp").forward(req, res);
+            req.getRequestDispatcher("confirmation.jsp").forward(req,res);
 
-        } catch (Exception e) {
+        } catch(Exception e){
             e.printStackTrace();
-            res.sendError(500, "Failed to process order");
+            req.setAttribute("errorMessage","Failed to create order!");
+            req.getRequestDispatcher("checkout.jsp").forward(req,res);
         }
     }
 }
