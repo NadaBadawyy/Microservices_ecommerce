@@ -6,3 +6,4 @@ Flask-CORS
 #To switch your Flask Todo backend from SQLite to MySQL
 mysqlclient
 mysql-connector-python
+requests
